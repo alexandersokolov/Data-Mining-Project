@@ -1,0 +1,15 @@
+{
+  "name": "associationnode",
+  "version": "1.0.0",
+  "description": "Assignment 3 for Data Mining CSCI 4144",
+  "main": "association.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Alexander Sokolov, Kelvin Njoroge",
+  "license": "ISC",
+  "dependencies": {
+    "js-combinatorics": "^0.5.3",
+    "lodash": "^4.17.5"
+  }
+}
