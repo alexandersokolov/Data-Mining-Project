@@ -1,6 +1,8 @@
-# DATA MINING CSCI 4144 ASSIGNMENT THREE
+# DATA MINING CSCI 4144 FINAL PROJECT
 
 ## Kelvin Njoroge and Alexander Sokolov
+
+This program is developed in the context of the CSCI 4144 Data Mining Course
 
 Start the program by running the following command: `node association.js`
 

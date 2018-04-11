@@ -1,7 +1,7 @@
 {
   "name": "associationnode",
   "version": "1.0.0",
-  "description": "Assignment 3 for Data Mining CSCI 4144",
+  "description": "Project for Data Mining CSCI 4144",
   "main": "association.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

@@ -1,13 +1,10 @@
 // Readline and fs are functionalities that are included in NodeJS that allow the program to read and write from files
 const readline = require('readline');
 const fs = require('fs');
-
-// Combinatorics is a library that calculates permutations in an array
 const Combinatorics = require('js-combinatorics');
 
 // Lodash is a library that provides functions such as contains() in an array
 const _ = require('lodash');
-
 
 // Variables that will be defined by the user
 let supportRate;
@@ -24,8 +21,7 @@ let transactions = [];
 let oneItemSetPattern = [];
 let twoItemSetPattern = [];
 
-
-// Array of frequent item sets
+// Array of frequent item sets, these will be used to generate the association rules
 let frequentItemSets = [];
 
 // Initializes command prompt for user input
@@ -49,7 +45,7 @@ rl.question('Please enter the minimum support rate: ', function(suppRate) {
             rf.on('line', function (line) {
                 // If it is the first line, then it the line with the attributes
                 if(lineNumber === 0) {
-                    // Removing all empty elements in the array that are caused by spaces
+                    // Removing all empty elements in the array that are caused by unnecessary spaces (if any)
                     attributes = line.split(",");
                     let i = attributes.length;
                     while(i--) {
@@ -63,10 +59,6 @@ rl.question('Please enter the minimum support rate: ', function(suppRate) {
                 // This if statement signifies that it is the end of the file and data parsing will begin based on transactions gathered
                 if(line.replace(/ /g,'') === '') {
 
-                    console.log("THIS IS THE LAST LINE");
-                    console.log("Attributes testing");
-                    console.log(attributes);
-
                     // This collection of loops goes over all transactions and adds individual elements and their frequencies to the oneItemSetPattern array
                     for(let b = 0; b < transactions.length; b++) {
                         for(let c = 0; c < attributes.length; c++) {
@@ -75,16 +67,23 @@ rl.question('Please enter the minimum support rate: ', function(suppRate) {
                             // Checking the itemset to see if it exists, if not adding and increasing the frequency
                             for(let d = 0; d < oneItemSetPattern.length; d++) {
 
-                                if(transactions[b][attributes[c]] === oneItemSetPattern[d]['attributes'][0]) {
+                                // Testing extra check to ensure that attribute name is also accounted for
+                                if(transactions[b][attributes[c]] === oneItemSetPattern[d]['attribute'] &&
+                                    oneItemSetPattern[d]['attributeName'] === attributes[c]) {
                                     oneItemSetPattern[d]['frequency'] = oneItemSetPattern[d]['frequency'] + 1;
+                                    // Add transaction id here
+                                    oneItemSetPattern[d]['transactionIds'].push(b);
                                     found = true;
                                 }
 
                             }
 
-                            let tempArray = [transactions[b][attributes[c]]];
+                            let tempArray = transactions[b][attributes[c]];
                             if(found === false) {
-                                oneItemSetPattern.push({attributes: tempArray ,frequency: 1});
+                                let transactionIds = [b];
+                                oneItemSetPattern.push({attribute: tempArray ,attributeName: attributes[c] , transactionIds: transactionIds,
+                                    frequency: 1});
+                                // Add transaction id here
                                 console.log("Pushing new item to oneItemPatternArray");
                                 console.log(oneItemSetPattern);
                             }
@@ -94,6 +93,10 @@ rl.question('Please enter the minimum support rate: ', function(suppRate) {
 
                     // Comparing occurences against minimum support and removing infrequent sets
                     let minimumFrequency = calculateMinimumFrequency(supportRate, transactions.length);
+
+                    console.log("MINIMUM FREQUENCY TESTING");
+                    console.log(minimumFrequency);
+
 
                     // Removing itemsets that do not meet the minimum frequency
                     let e = oneItemSetPattern.length;
@@ -107,18 +110,35 @@ rl.question('Please enter the minimum support rate: ', function(suppRate) {
                     console.log("Testing after pruning");
                     console.log(oneItemSetPattern);
 
+                    // Forms pairs (That do not repeat) twoItemSetPattern from the oneItemSetPattern
+                    let k = 2;
+                    let cmb = Combinatorics.combination(oneItemSetPattern, k);
+                    while(a = cmb.next()) {
+                        if(a.length === k) {
+                            twoItemSetPattern.push(a);
+                        }
+                    }
+
+
+                    console.log("Two item set pattern testing");
+                    console.log(twoItemSetPattern);
+
+                    twoItemSetPattern = frequencyPruning(twoItemSetPattern, minimumFrequency);
+
+                    console.log("Two item set pattern testing after pruning");
+                    console.log(twoItemSetPattern);
+
                     // Adding the frequent item sets to the frequent item sets array
-
-
                     for(let f = 0; f < oneItemSetPattern.length; f++) {
                         frequentItemSets.push(oneItemSetPattern[f]);
                     }
 
+                    for(let f = 0; f < twoItemSetPattern.length; f++) {
+                        frequentItemSets.push(twoItemSetPattern[f]);
+                    }
 
-
-
-                    console.log("SINGLE ITEM PATTERN");
-                    console.log(oneItemSetPattern);
+                    // testing the join operation
+                    joinOperation(twoItemSetPattern, 3, minimumFrequency);
 
                 }
 
@@ -131,7 +151,7 @@ rl.question('Please enter the minimum support rate: ', function(suppRate) {
 
 
                     let currentTransaction = {};
-                    let lineValues = line.split(" ");
+                    let lineValues = line.split(",");
                     let x = lineValues.length;
                     while (x--) {
                         if (lineValues[x] === "") {
@@ -154,65 +174,109 @@ rl.question('Please enter the minimum support rate: ', function(suppRate) {
     });
 });
 
-
-
+// Function that calculates minimum frequency
 function calculateMinimumFrequency(supportRate, totalTransactions) {
     return supportRate * totalTransactions;
 }
 
-// Calculates the frequency of a given item set
-function calculateFrequency(itemSet, transactions) {
+// Given an item set, this function calculates the minimum frequency of common attributes by comparing common transaction ids to the minimum frequency
+function frequencyPruning(itemSet, minimumFrequency) {
+    let newItemSet = [];
+    for(let i = 0; i < itemSet.length; i++) {
+
+        // This process identifies the transaction ids that show up in all items
+        let totalArray = [];
+        for(let y = 0; y < itemSet[i].length; y++) {
+           totalArray.push(itemSet[i][y]['transactionIds']);
+        }
+        let unique = _.intersection.apply(_,totalArray);
+        if(unique.length >= minimumFrequency) {
+            newItemSet.push(itemSet[i]);
+        }
+    }
+    return newItemSet;
+}
+
+// Function that will join itemsets with itself until it no longer meets the minimum support
+function joinOperation(itemSet, k, minimumFrequency) {
+
+    let newItemSet = [];
 
     for(let i = 0; i < itemSet.length; i++) {
 
-        for(let x = 1; x < itemSet[i].length; x++){
-
-            itemSet[i] = JSON.parse(JSON.stringify(itemSet[i]));
-            // Concatenates the attributes in a single entry
-            itemSet[i][0]["attributes"] = itemSet[i][0]["attributes"].concat(itemSet[i][x]["attributes"]);
-            // Sets the other entries as empty array after they have been added
-            itemSet[i][x] = [];
-        }
-
-        // Looping over the array again and removing the empty arrays
-        x = itemSet[i].length;
-        while (x--) {
-            if (itemSet[i][x].length === 0) {
-                itemSet[i].splice(x, 1);
+        for(let y = 1; y < itemSet.length; y++) {
+            let numMatches = 0;
+            // currentIteration or "k" - 1 in this case represents the number of attributes that should be present in a set
+            for(let z = 0; z < k - 1; z++) {
+                if (itemSet[i][z]['attribute'] === itemSet[y][z]['attribute'] && itemSet[i][z]['attributeName'] === itemSet[y][z]['attributeName']) {
+                    numMatches++;
+                }
             }
-        }
-    }
 
-
-    for(x = 0; x < itemSet.length; x++) {
-        itemSet[x] = itemSet[x][0];
-    }
-
-    // For every entry, going over every transaction and calculating frequency
-    for(let z = 0; z < itemSet.length; z++) {
-
-        let newFrequency = 0;
-
-        for (let y = 0; y < transactions.length; y++) {
-
-            let allAttributesFound = true;
-            for(let q = 0; q < itemSet[z]["attributes"].length; q++) {
-
-                if(! _.includes(transactions[y],itemSet[z]["attributes"][q])) {
-                    allAttributesFound = false;
+            if(numMatches >= k-2) {
+                // Combine the item set and add it to the array
+                let currentItemToAdd = [];
+                let differentOccurence = 0;
+                for(let z = 0; z < k - 1; z++) {
+                    if (itemSet[i][z]['attribute'] === itemSet[y][z]['attribute'] && itemSet[i][z]['attributeName'] === itemSet[y][z]['attributeName']) {
+                        // Adds the same attributes once
+                        currentItemToAdd.push(itemSet[i][z]);
+                    } else {
+                        // Adds both different attribute which creates the +1 dataset
+                        currentItemToAdd.push(itemSet[i][z]);
+                        currentItemToAdd.push(itemSet[y][z]);
+                        differentOccurence++;
+                    }
                 }
 
-            }
 
-            if(allAttributesFound === true) {
-                newFrequency++;
+                console.log("ITEM SET TESTING");
+                console.log(newItemSet);
+
+                console.log("Current Item to add");
+                console.log(currentItemToAdd);
+
+
+                let tempSet = new Set (newItemSet);
+                let currentHas = tempSet.has(currentItemToAdd);
+
+                console.log("Current has value");
+                console.log(currentHas);
+
+
+                if(currentHas) {
+                    console.log("NEW ITEM SET ALREADY INCLUDES ITEM");
+                    console.log(newItemSet);
+                }
+
+                // Problem might be with the way we are pushing things in the array, if the problem persists, rewrite this statement to make it more readable
+                if( currentHas === false && differentOccurence === 1 && currentItemToAdd.length === k) {
+                    newItemSet.push(currentItemToAdd);
+                }
+
+                // We want to push if array includes is false, if different occurence is 1 and if currentItemToAdd is k
+
+
             }
         }
-
-        itemSet[z]["frequency"] = newFrequency;
     }
 
-    return itemSet;
+    //
+    console.log("NEW ITEM SET TESTING AFTER PRUNING");
+    console.log(frequencyPruning(newItemSet, minimumFrequency));
+
+    // console.log("Lodash includes testing");
+    // console.log(_.includes([1, 2, 3], 1));
+    //
+    // console.log("Lodash includes testing 2");
+    // console.log(_.includes.apply([[1, 2, 3]], 1));
+
+
+}
+
+// This function writes the rules that are found in the frequentItemSet array
+function writeRule() {
+
 }
 
 
