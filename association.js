@@ -63,6 +63,10 @@ rl.question('Please enter the minimum support rate: ', function(suppRate) {
                 // This if statement signifies that it is the end of the file and data parsing will begin based on transactions gathered
                 if(line.replace(/ /g,'') === '') {
 
+                    console.log("THIS IS THE LAST LINE");
+                    console.log("Attributes testing");
+                    console.log(attributes);
+
                     // This collection of loops goes over all transactions and adds individual elements and their frequencies to the oneItemSetPattern array
                     for(let b = 0; b < transactions.length; b++) {
                         for(let c = 0; c < attributes.length; c++) {
@@ -81,6 +85,8 @@ rl.question('Please enter the minimum support rate: ', function(suppRate) {
                             let tempArray = [transactions[b][attributes[c]]];
                             if(found === false) {
                                 oneItemSetPattern.push({attributes: tempArray ,frequency: 1});
+                                console.log("Pushing new item to oneItemPatternArray");
+                                console.log(oneItemSetPattern);
                             }
                         }
                     }
@@ -109,32 +115,10 @@ rl.question('Please enter the minimum support rate: ', function(suppRate) {
                     }
 
 
-                    // Forms pairs (That do not repeat) twoItemSetPattern from the oneItemSetPattern
-                    let k = 2;
-                    let cmb = Combinatorics.combination(oneItemSetPattern, k);
-                    while(a = cmb.next()) {
-                        if(a.length === k) {
-                            twoItemSetPattern.push(a);
-                        }
-                    }
-                    // THIS IS THE FARTHEST THE CODE GOES, we have the first item pattern and second item patterns along with their frequencies
-                    twoItemSetPattern = calculateFrequency(twoItemSetPattern, transactions);
+
 
                     console.log("SINGLE ITEM PATTERN");
-                    // console.log(JSON.stringify(oneItemSetPattern));
                     console.log(oneItemSetPattern);
-
-                    console.log("TWO ITEM PATTERN");
-                    // console.log(JSON.stringify(twoItemSetPattern));
-                    console.log(twoItemSetPattern);
-
-
-                    // ****Two ItemSetPattern still needs to remove elements that do not match the minimum frequency, this can be done here or in the calculate frequency function
-
-                    // We now have to generate 3-item, 4-item sets recursively... using L JOIN L
-                    // After that, printing out the association rules
-
-
 
                 }
 
