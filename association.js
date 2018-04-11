@@ -31,8 +31,6 @@ let frequentItemSets = [];
 // Initializes command prompt for user input
 let rl = readline.createInterface(process.stdin, process.stdout);
 
-
-
 // Getting user input
 rl.question('Please enter the minimum support rate: ', function(suppRate) {
     supportRate = suppRate;
@@ -49,12 +47,10 @@ rl.question('Please enter the minimum support rate: ', function(suppRate) {
 
             let lineNumber = 0;
             rf.on('line', function (line) {
-
-
                 // If it is the first line, then it the line with the attributes
                 if(lineNumber === 0) {
                     // Removing all empty elements in the array that are caused by spaces
-                    attributes = line.split(" ");
+                    attributes = line.split(",");
                     let i = attributes.length;
                     while(i--) {
 
@@ -144,6 +140,12 @@ rl.question('Please enter the minimum support rate: ', function(suppRate) {
 
                 // If not the first or last line then it keeps parsing the transactions and adding them to the transactions array
                 if(line.replace(/ /g,'') !== '' && lineNumber !== 0) {
+
+                    console.log("");
+                    console.log("Current line testing");
+                    console.log(line);
+
+
                     let currentTransaction = {};
                     let lineValues = line.split(" ");
                     let x = lineValues.length;
@@ -156,6 +158,11 @@ rl.question('Please enter the minimum support rate: ', function(suppRate) {
                         currentTransaction[attributes[a]] = lineValues[a];
                     }
                     transactions.push(currentTransaction);
+
+                    console.log("Current transaction testing");
+                    console.log(currentTransaction);
+
+                    console.log("");
                 }
                 lineNumber++;
             });
@@ -222,40 +229,6 @@ function calculateFrequency(itemSet, transactions) {
     }
 
     return itemSet;
-}
-
-function getComb(arr, cmb){
-    let x = [];
-    cmb = Combinatorics.combination(arr, cmb);
-    while(a = cmb.next()) x.push(a);
-    return x;
-}
-// Association rules print out function
-function getRules(transactions, largestSet, confidenceThreshold) {
-    let allRulles = [];
-
-    for (let i in largestSet) {
-        let itemSet = largestSet[i];
-        let subSets = Subset.findSubsets(itemSet, 0); // gets all the subsets
-
-        for (let j in subSets) {
-            let subSet = subSets[j];
-            let confidence = (transactions.getSupport(itemSet) / transactions.getSupport(subSet)) * 100.0;
-
-            if (confidence >= confidenceThreshold) {
-                let rule = new AssociationRule();
-                subSet.forEach(i => rule.X.push(i));
-                itemSet.removeItemset(subSet).forEach(i => rule.Y.push(i));
-                rule.support = transactions.getSupport(itemSet);
-                rule.confidence = confidence;
-
-                if (rule.X.length > 0 && rule.Y.length > 0) {
-                    allRulles.push(rule);
-                }
-            }
-        }
-    }
-    return allRulles;
 }
 
 
