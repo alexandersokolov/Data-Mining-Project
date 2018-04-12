@@ -15,23 +15,10 @@ Enter the name of the data file
     This also means that the data file must have two empty lines at the end
     
     functions 
-    - calculateMinimumFrequecy
-    - calculateFrequency
-    - getComb
-    - getRules
+    - calculateMinimumFrequecy(): Calculates minimum frequency based on transactions
+    - frequencyPruning(): The most important function that takes advantage of the improved apriori algorithm by pruning itemsets based on the transaction ids that they have in common to avoid repeadetly scanning the database
+    - joinOperation(): Function that joins together item sets to create new one
+    - writeRulesToFile(): Writes the discovered rules to a text file called results.txt
 
-Run into an error with the module combinatorics while trying to get the k-item iteration     
 
-task Breakdown
-
-Alexander Sokolov
-
-- Reading data from command line
-- single item iteration
-- two item iteration
-
-Kelvin Njoroge
-- AssociationRules
-- Recursion for k-items
-- Structure definitions
 

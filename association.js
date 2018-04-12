@@ -135,6 +135,10 @@ rl.question('Please enter the minimum support rate: ', function(suppRate) {
                         }
                         currentIteration++;
                     }
+
+                    for(let s = 0; s < frequentItemSets.length; s++) {
+                        delete frequentItemSets[s]['transactionIds'];
+                    }
                     writeRulesToFile();
 
                 }
@@ -227,7 +231,7 @@ function joinOperation(itemSet, k, minimumFrequency) {
 // This function writes the rules that are found in the frequentItemSet array
 function writeRulesToFile() {
 
-        let introduction = "Summary: \nTotal rows in the original set: " + transactions.length + "\nTotal Rules Discovered: " + frequentItemSets.length + "\n";
+        let introduction = "Summary: \nTotal rows in the original set: " + transactions.length + "\nTotal Rules Discovered: " + frequentItemSets.length + "\n\n";
         fs.writeFile('results.txt', introduction, function (err) {
             if (err)
                 return console.log(err);
@@ -243,7 +247,4 @@ function writeRulesToFile() {
         }
 
     console.log("You can find the mined rules in the rules.txt file");
-
-
-
 }
